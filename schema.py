@@ -50,3 +50,19 @@ class ResourceUpdate(ResourceBase):
     description: str | None = Field(default=None, example="Resource Description", max_length=1000)
     source: str | None = Field(default=None, example="Resource Source")
     bucket_id: int | None = None
+
+
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str = Field(min_length=4, max_length=255)
+
+class UserResponse(UserBase):
+    id: int
+    created_at: datetime = Field(default=datetime.now(), example=datetime.now())
+    updated_at: datetime = Field(default=datetime.now(), example=datetime.now())
+    
+    model_config = ConfigDict(
+        from_attributes=True
+    )
