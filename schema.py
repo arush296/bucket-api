@@ -12,6 +12,7 @@ class BucketCreate(BucketBase):
 
 class BucketResponse(BucketBase):
     id: int
+    user_id: int
     created_at: datetime = Field(default=datetime.now(), example=datetime.now())
     updated_at: datetime = Field(default=datetime.now(), example=datetime.now())
     
@@ -66,3 +67,7 @@ class UserResponse(UserBase):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

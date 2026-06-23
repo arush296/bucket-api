@@ -40,9 +40,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Bucket API", lifespan=lifespan)
 
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(buckets.router, prefix="/api/buckets", tags=["Buckets"]) # tags is to reorganise in swagger docs
 app.include_router(resources.router, prefix="/api/resources", tags=["Resources"])
-app.include_router(users.router, prefix="/api/users", tags=["Users"])
+
 
 
 @app.get("/")

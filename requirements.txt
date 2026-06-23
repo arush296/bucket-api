@@ -2,3 +2,9 @@ fastapi
 uvicorn
 sqlalchemy
 pydantic
+pyjwt
+pwdlib[argon2]
+pydantic-settings
+email-validator
+aiosqlite
+jinja2

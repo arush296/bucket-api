@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
+# pyrefly: ignore [missing-import]
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
+# pyrefly: ignore [missing-import]
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -25,6 +27,8 @@ class Bucket(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(), onupdate=datetime.now())
 
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user: Mapped["User"] = relationship(back_populates="buckets")
     resources: Mapped[list["Resource"]] = relationship(back_populates="bucket")
 
 class Resource(Base):
