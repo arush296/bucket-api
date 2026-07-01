@@ -9,6 +9,7 @@ from datetime import datetime
 from database import get_db
 import models
 from schema import ResourceCreate, ResourceResponse, ResourceUpdate
+from auth import CurrentUser
 
 router = APIRouter()
 
@@ -18,16 +19,23 @@ router = APIRouter()
 
 # /api/resources
 @router.get("", response_model=list[ResourceResponse])
-async def read_resources(db:Annotated[AsyncSession, Depends(get_db)]):
-    db_result = await db.execute(select(models.Resource))
+async def read_resources(current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]):
+    db_result = await db.execute(
+        select(models.Resource)
+        .join(models.Bucket)
+        .where(models.Bucket.user_id == current_user.id)
+    )
     result = db_result.scalars().all()
     return result
 
 
 # /api/resources
 @router.post("", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)
-async def create_resource(resource: ResourceCreate, db: Annotated[AsyncSession, Depends(get_db)]):
-    db_result = await db.execute(select(models.Bucket).where(models.Bucket.id == resource.bucket_id))
+async def create_resource(resource: ResourceCreate, current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]):
+    db_result = await db.execute(
+        select(models.Bucket)
+        .where(models.Bucket.id == resource.bucket_id, models.Bucket.user_id == current_user.id)
+    )
     result = db_result.scalars().first()
     if not result:
         raise HTTPException(status_code=404, detail="Bucket not found")
@@ -46,8 +54,12 @@ async def create_resource(resource: ResourceCreate, db: Annotated[AsyncSession, 
 
 # /api/resources/{id}
 @router.get("/{id}", response_model=ResourceResponse)
-async def read_resource(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
-    db_result = await db.execute(select(models.Resource).where(models.Resource.id == id))
+async def read_resource(id: int, current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]):
+    db_result = await db.execute(
+        select(models.Resource)
+        .join(models.Bucket)
+        .where(models.Resource.id == id, models.Bucket.user_id == current_user.id)
+    )
     result = db_result.scalars().first()
     if not result:
         raise HTTPException(status_code=404, detail="Resource not found")
@@ -56,17 +68,24 @@ async def read_resource(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
 
 # /api/resources/{id}
 @router.patch("/{id}", response_model=ResourceResponse)
-async def update_resource(id: int, resource_update: ResourceUpdate, db: Annotated[AsyncSession, Depends(get_db)]):
-    db_result = await db.execute(select(models.Resource).where(models.Resource.id == id))
+async def update_resource(id: int, resource_update: ResourceUpdate, current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]):
+    db_result = await db.execute(
+        select(models.Resource)
+        .join(models.Bucket)
+        .where(models.Resource.id == id, models.Bucket.user_id == current_user.id)
+    )
     result = db_result.scalars().first()
     if not result:
         raise HTTPException(status_code=404, detail="Resource not found")
         
     update_data = resource_update.model_dump(exclude_unset=True)
     
-    # If bucket_id is being updated, verify the new bucket exists
+    # If bucket_id is being updated, verify the new bucket exists and belongs to the user
     if "bucket_id" in update_data and update_data["bucket_id"] is not None:
-        db_bucket_result = await db.execute(select(models.Bucket).where(models.Bucket.id == update_data["bucket_id"]))
+        db_bucket_result = await db.execute(
+            select(models.Bucket)
+            .where(models.Bucket.id == update_data["bucket_id"], models.Bucket.user_id == current_user.id)
+        )
         db_bucket = db_bucket_result.scalars().first()
         if not db_bucket:
             raise HTTPException(status_code=404, detail="Bucket not found")
@@ -83,8 +102,12 @@ async def update_resource(id: int, resource_update: ResourceUpdate, db: Annotate
 
 # /api/resources/{id}
 @router.delete("/{id}")
-async def delete_resource(id: int, db: Annotated[AsyncSession, Depends(get_db)]):
-    db_result = await db.execute(select(models.Resource).where(models.Resource.id == id))
+async def delete_resource(id: int, current_user: CurrentUser, db: Annotated[AsyncSession, Depends(get_db)]):
+    db_result = await db.execute(
+        select(models.Resource)
+        .join(models.Bucket)
+        .where(models.Resource.id == id, models.Bucket.user_id == current_user.id)
+    )
     result = db_result.scalars().first()
     if not result:
         raise HTTPException(status_code=404, detail="Resource not found")

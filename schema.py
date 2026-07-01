@@ -54,6 +54,7 @@ class ResourceUpdate(ResourceBase):
 
 
 class UserBase(BaseModel):
+    name: str = Field(example="John Doe", min_length=1, max_length=255)
     email: EmailStr
 
 class UserCreate(UserBase):
@@ -67,6 +68,11 @@ class UserResponse(UserBase):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+class UserUpdate(BaseModel):
+    name: str | None = Field(default=None, example="John Doe", min_length=1, max_length=255)
+    email: EmailStr | None = Field(default=None)
+    password: str | None = Field(default=None, min_length=4, max_length=255)
 
 class Token(BaseModel):
     access_token: str
